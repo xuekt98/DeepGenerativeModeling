@@ -1,0 +1,79 @@
+task: 'semantic2photo'
+runner: 'DDPMRunner'
+
+training:
+  batch_size: 32
+  n_epochs: 100
+  num_workers: 8
+  save_interval: 1 # epoch
+  sample_interval: 0.2 # epoch
+  validation_interval: 1 #epoch
+
+data:
+  dataset: 'celeba'
+  dataset_type: 'custom_single'
+  dataset_path: '/media/x/disk/BB_datasets/celeba'
+  # dataset_path: '/mnt/GPU_AI_TEST/KaelSnow/dataset/CelebAMaskHQ'
+  image_size: 64
+  channels: 3
+  to_normal: True
+  flip: True
+  has_test_dataset: True
+
+model:
+  name: 'DDPM'
+  model_load_path: # 'output/DDPM/model/latest_model_40.pth'
+  optim_sche_load_path: # 'output/DDPM/latest_optim_sche_40.pth'
+
+  DDPM:
+    params:
+      loss_type: 'l1' # 'l1', 'l2'
+      n_steps: 1000
+
+      # UNetConfig
+      UNetParams:
+        image_size: 64
+        in_channels: 3
+        model_channels: 32
+        out_channels: 3
+        num_res_blocks: 2
+        attention_resolutions: !!python/tuple
+          - 32
+        channel_mult: !!python/tuple
+          - 1
+          - 2
+          - 2
+          - 4
+          - 4
+        conv_resample: True
+        dims: 2
+        num_heads: 8
+        num_head_channels: 64
+        use_scale_shift_norm: True
+        resblock_updown: True
+        use_spatial_transformer: False
+
+    optimizer:
+      weight_decay: 0.000
+      optimizer: 'Adam'
+      lr: 1.e-4
+      beta1: 0.9
+
+    scheduler:
+      factor: 0.4
+      patience: 5000
+      threshold: 0.0001
+      cooldown: 5000
+      min_lr: 5.e-7
+
+EMA:
+  use_ema: True
+  ema_decay: 0.995
+  update_ema_interval: 16 # step
+  start_ema_step: 50000
+
+test:
+  batch_size: 8
+  sample_num: 5
+  with_diff: False
+  has_condition: False
